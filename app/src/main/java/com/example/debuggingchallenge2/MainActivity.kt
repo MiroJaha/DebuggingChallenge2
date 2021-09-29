@@ -1,5 +1,6 @@
 package com.example.debuggingchallenge2
 
+import android.content.Context
 import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -7,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -31,9 +33,29 @@ class MainActivity : AppCompatActivity() {
         arrayListOf(count++,"China", "Beijing"),
     )
 
+    private fun callData(){
+        var count2=0
+        val size = sharedPreferences.getInt("size",0)
+        if(size!=0){
+            count=size+1
+            arrayListOfCountriesAndCapitals= arrayListOf()
+            for(i in 1..size) {
+                val savedData = arrayListOf<Any>()
+                savedData.add(sharedPreferences.getString("${count2++}", "")!!)
+                savedData.add(sharedPreferences.getString("${count2++}", "")!!)
+                savedData.add(sharedPreferences.getString("${count2++}", "")!!)
+                arrayListOfCountriesAndCapitals.add(savedData)
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        sharedPreferences = this.getSharedPreferences(
+            getString(R.string.preference_file_key), Context.MODE_PRIVATE)
+        callData()
 
         mainLayout=findViewById(R.id.mailL)
         fabButton = findViewById(R.id.fabBtn)
@@ -72,8 +94,25 @@ class MainActivity : AppCompatActivity() {
 
                 alertDialog.dismiss()
             }
-
         }
+        recyclerAdapter.setOnItemClickListener(object : ListSelectionRecyclerViewAdapter.OnItemClickListener {
+            override fun onItemClick(position: Int) {
+                Toast.makeText(this@MainActivity, "${arrayListOfCountriesAndCapitals[position][1]}   ${arrayListOfCountriesAndCapitals[position][2]}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    override fun onStop() {
+        var count2=0
+        for(i in arrayListOfCountriesAndCapitals)
+            with(sharedPreferences.edit()) {
+                putInt("size", arrayListOfCountriesAndCapitals.size)
+                putString("${count2++}", i[0].toString())
+                putString("${count2++}", i[1].toString())
+                putString("${count2++}", i[2].toString())
+                apply()
+            }
+        super.onStop()
     }
 
     private fun setupAlertDialog(): Pair<View, AlertDialog> {
